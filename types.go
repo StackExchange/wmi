@@ -2,6 +2,62 @@ package wmi
 
 import "time"
 
+type Win32_PerfRawData_Tcpip_NetworkInterface struct {
+	BytesReceivedPerSec             uint32
+	BytesSentPerSec                 uint32
+	BytesTotalPerSec                uint64
+	Caption                         string
+	CurrentBandwidth                uint32
+	Description                     string
+	Frequency_Object                uint64
+	Frequency_PerfTime              uint64
+	Frequency_Sys100NS              uint64
+	Name                            string
+	OutputQueueLength               uint32
+	PacketsOutboundDiscarded        uint32
+	PacketsOutboundErrors           uint32
+	PacketsPerSec                   uint32
+	PacketsReceivedDiscarded        uint32
+	PacketsReceivedErrors           uint32
+	PacketsReceivedNonUnicastPerSec uint32
+	PacketsReceivedPerSec           uint32
+	PacketsReceivedUnicastPerSec    uint32
+	PacketsReceivedUnknown          uint32
+	PacketsSentNonUnicastPerSec     uint32
+	PacketsSentPerSec               uint32
+	PacketsSentUnicastPerSec        uint32
+	Timestamp_Object                uint64
+	Timestamp_PerfTime              uint64
+	Timestamp_Sys100NS              uint64
+}
+
+type Win32_PerfRawData_PerfOS_Processor struct {
+	C1TransitionsPerSec   uint64
+	C2TransitionsPerSec   uint64
+	C3TransitionsPerSec   uint64
+	Caption               string
+	DPCRate               uint32
+	DPCsQueuedPerSec      uint32
+	Description           string
+	Frequency_Object      uint64
+	Frequency_PerfTime    uint64
+	Frequency_Sys100NS    uint64
+	InterruptsPerSec      uint32
+	Name                  string
+	PercentC1Time         uint64
+	PercentC2Time         uint64
+	PercentC3Time         uint64
+	PercentDPCTime        uint64
+	PercentIdleTime       uint64
+	PercentInterruptTime  uint64
+	PercentPrivilegedTime uint64
+	PercentProcessorTime  uint64
+	PercentUserTime       uint64
+	Timestamp_Object      uint64
+	Timestamp_PerfTime    uint64
+	Timestamp_Sys100NS    uint64
+}
+
 type Win32_Process struct {
 	CSCreationClassName        string
 	CSName                     string
