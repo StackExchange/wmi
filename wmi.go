@@ -131,7 +131,7 @@ func loadEntity(dst interface{}, src *ole.IDispatch) error {
 		}
 		prop, err := oleutil.GetProperty(src, n)
 		if err != nil {
-			return err
+			continue
 		}
 		switch f.Kind() {
 		case reflect.String:
