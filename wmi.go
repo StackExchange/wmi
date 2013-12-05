@@ -7,6 +7,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"time"
 
 	ole "github.com/mjibson/go-ole"
 	"github.com/mjibson/go-ole/oleutil"
@@ -117,6 +118,8 @@ func (e *ErrFieldMismatch) Error() string {
 		e.FieldName, e.StructType, e.Reason)
 }
 
+var timeType = reflect.TypeOf(time.Time{})
+
 // loadEntity loads a SWbemObject into a struct pointer.
 func loadEntity(dst interface{}, src *ole.IDispatch) error {
 	v := reflect.ValueOf(dst).Elem()
@@ -165,6 +168,18 @@ func loadEntity(dst interface{}, src *ole.IDispatch) error {
 					return err
 				}
 				f.SetUint(uint64(iv))
+			case reflect.Struct:
+				switch f.Type() {
+				case timeType:
+					if len(sv) == 25 {
+						sv = sv[:22] + "0" + sv[22:]
+					}
+					t, err := time.Parse("20060102150405.000000-0700", sv)
+					if err != nil {
+						return err
+					}
+					f.Set(reflect.ValueOf(t))
+				}
 			}
 		}
 	}
