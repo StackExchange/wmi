@@ -136,6 +136,8 @@ func loadEntity(dst interface{}, src *ole.IDispatch) error {
 		switch f.Kind() {
 		case reflect.String:
 			f.SetString(prop.ToString())
+		case reflect.Uint16, reflect.Uint32:
+			f.SetUint(uint64(prop.Val))
 		default:
 			l.Println("ignore:", n, f.Type())
 		}
