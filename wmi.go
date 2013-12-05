@@ -6,9 +6,10 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"strconv"
 
-	ole "github.com/mattn/go-ole"
-	"github.com/mattn/go-ole/oleutil"
+	ole "github.com/mjibson/go-ole"
+	"github.com/mjibson/go-ole/oleutil"
 )
 
 var l = log.New(os.Stdout, "", log.LstdFlags)
@@ -133,13 +134,38 @@ func loadEntity(dst interface{}, src *ole.IDispatch) error {
 		if err != nil {
 			continue
 		}
-		switch f.Kind() {
+		switch val := prop.Value(); reflect.ValueOf(val).Kind() {
+		case reflect.Int64:
+			iv := val.(int64)
+			switch f.Kind() {
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				f.SetInt(iv)
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				f.SetUint(uint64(iv))
+			default:
+				return &ErrFieldMismatch{
+					StructType: f.Type(),
+					FieldName:  n,
+					Reason:     "not an integer class",
+				}
+			}
 		case reflect.String:
-			f.SetString(prop.ToString())
-		case reflect.Uint16, reflect.Uint32:
-			f.SetUint(uint64(prop.Val))
-		default:
-			l.Println("ignore:", n, f.Type())
+			sv := val.(string)
+			iv, err := strconv.ParseInt(sv, 10, 64)
+			switch f.Kind() {
+			case reflect.String:
+				f.SetString(sv)
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				if err != nil {
+					return err
+				}
+				f.SetInt(iv)
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				if err != nil {
+					return err
+				}
+				f.SetUint(uint64(iv))
+			}
 		}
 	}
 	return nil
