@@ -257,3 +257,49 @@ type Win32_OperatingSystem struct {
 	Version                                   string
 	WindowsDirectory                          string
 }
+
+type Win32_PerfRawData_PerfDisk_LogicalDisk struct {
+	AvgDiskBytesPerRead          uint64
+	AvgDiskBytesPerRead_Base     uint32
+	AvgDiskBytesPerTransfer      uint64
+	AvgDiskBytesPerTransfer_Base uint32
+	AvgDiskBytesPerWrite         uint64
+	AvgDiskBytesPerWrite_Base    uint32
+	AvgDiskQueueLength           uint64
+	AvgDiskReadQueueLength       uint64
+	AvgDiskSecPerRead            uint32
+	AvgDiskSecPerRead_Base       uint32
+	AvgDiskSecPerTransfer        uint32
+	AvgDiskSecPerTransfer_Base   uint32
+	AvgDiskSecPerWrite           uint32
+	AvgDiskSecPerWrite_Base      uint32
+	AvgDiskWriteQueueLength      uint64
+	Caption                      string
+	CurrentDiskQueueLength       uint32
+	Description                  string
+	DiskBytesPerSec              uint64
+	DiskReadBytesPerSec          uint64
+	DiskReadsPerSec              uint32
+	DiskTransfersPerSec          uint32
+	DiskWriteBytesPerSec         uint64
+	DiskWritesPerSec             uint32
+	FreeMegabytes                uint32
+	Frequency_Object             uint64
+	Frequency_PerfTime           uint64
+	Frequency_Sys100NS           uint64
+	Name                         string
+	PercentDiskReadTime          uint64
+	PercentDiskReadTime_Base     uint64
+	PercentDiskTime              uint64
+	PercentDiskTime_Base         uint64
+	PercentDiskWriteTime         uint64
+	PercentDiskWriteTime_Base    uint64
+	PercentFreeSpace             uint32
+	PercentFreeSpace_Base        uint32
+	PercentIdleTime              uint64
+	PercentIdleTime_Base         uint64
+	SplitIOPerSec                uint32
+	Timestamp_Object             uint64
+	Timestamp_PerfTime           uint64
+	Timestamp_Sys100NS           uint64
+}
