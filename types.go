@@ -390,3 +390,39 @@ type Win32_PerfRawData_W3SVC_WebService struct {
 	TraceRequestsPerSec                 uint32
 	UnlockRequestsPerSec                uint32
 }
+
+type Win32_PerfRawData_MSSQLSERVER_SQLServerGeneralStatistics struct {
+	ActiveTempTables              uint64
+	Caption                       string
+	ConnectionResetPersec         uint64
+	Description                   string
+	EventNotificationsDelayedDrop uint64
+	Frequency_Object              uint64
+	Frequency_PerfTime            uint64
+	Frequency_Sys100NS            uint64
+	HTTPAuthenticatedRequests     uint64
+	LogicalConnections            uint64
+	LoginsPersec                  uint64
+	LogoutsPersec                 uint64
+	MarsDeadlocks                 uint64
+	Name                          string
+	Nonatomicyieldrate            uint64
+	Processesblocked              uint64
+	SOAPEmptyRequests             uint64
+	SOAPMethodInvocations         uint64
+	SOAPSessionInitiateRequests   uint64
+	SOAPSessionTerminateRequests  uint64
+	SOAPSQLRequests               uint64
+	SOAPWSDLRequests              uint64
+	SQLTraceIOProviderLockWaits   uint64
+	Tempdbrecoveryunitid          uint64
+	Tempdbrowsetid                uint64
+	TempTablesCreationRate        uint64
+	TempTablesForDestruction      uint64
+	Timestamp_Object              uint64
+	Timestamp_PerfTime            uint64
+	Timestamp_Sys100NS            uint64
+	TraceEventNotificationQueue   uint64
+	Transactions                  uint64
+	UserConnections               uint64
+}
