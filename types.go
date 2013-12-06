@@ -105,3 +105,45 @@ type Win32_Process struct {
 	WriteOperationCount        uint64
 	WriteTransferCount         uint64
 }
+
+type Win32_PerfRawData_PerfOS_Memory struct {
+	AvailableBytes                  uint64
+	AvailableKBytes                 uint64
+	AvailableMBytes                 uint64
+	CacheBytes                      uint64
+	CacheBytesPeak                  uint64
+	CacheFaultsPerSec               uint32
+	Caption                         string
+	CommitLimit                     uint64
+	CommittedBytes                  uint64
+	DemandZeroFaultsPerSec          uint32
+	Description                     string
+	FreeSystemPageTableEntries      uint32
+	Frequency_Object                uint64
+	Frequency_PerfTime              uint64
+	Frequency_Sys100NS              uint64
+	Name                            string
+	PageFaultsPerSec                uint32
+	PageReadsPerSec                 uint32
+	PagesInputPerSec                uint32
+	PagesOutputPerSec               uint32
+	PagesPerSec                     uint32
+	PageWritesPerSec                uint32
+	PercentCommittedBytesInUse      uint32
+	PercentCommittedBytesInUse_Base uint32
+	PoolNonpagedAllocs              uint32
+	PoolNonpagedBytes               uint64
+	PoolPagedAllocs                 uint32
+	PoolPagedBytes                  uint64
+	PoolPagedResidentBytes          uint64
+	SystemCacheResidentBytes        uint64
+	SystemCodeResidentBytes         uint64
+	SystemCodeTotalBytes            uint64
+	SystemDriverResidentBytes       uint64
+	SystemDriverTotalBytes          uint64
+	Timestamp_Object                uint64
+	Timestamp_PerfTime              uint64
+	Timestamp_Sys100NS              uint64
+	TransitionFaultsPerSec          uint32
+	WriteCopiesPerSec               uint32
+}
