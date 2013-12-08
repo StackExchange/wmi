@@ -181,6 +181,18 @@ func loadEntity(dst interface{}, src *ole.IDispatch) error {
 					f.Set(reflect.ValueOf(t))
 				}
 			}
+		case reflect.Bool:
+			bv := val.(bool)
+			switch f.Kind() {
+			case reflect.Bool:
+				f.SetBool(bv)
+			default:
+				return &ErrFieldMismatch{
+					StructType: f.Type(),
+					FieldName: n,
+					Reason: "not a bool",
+				}
+			}
 		}
 	}
 	return nil
