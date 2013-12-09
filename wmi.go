@@ -189,8 +189,8 @@ func loadEntity(dst interface{}, src *ole.IDispatch) error {
 			default:
 				return &ErrFieldMismatch{
 					StructType: f.Type(),
-					FieldName: n,
-					Reason: "not a bool",
+					FieldName:  n,
+					Reason:     "not a bool",
 				}
 			}
 		}
