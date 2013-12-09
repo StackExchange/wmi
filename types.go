@@ -426,3 +426,52 @@ type Win32_PerfRawData_MSSQLSERVER_SQLServerGeneralStatistics struct {
 	Transactions                  uint64
 	UserConnections               uint64
 }
+
+type Win32_PerfRawData_MSSQLSERVER_SQLServerSQLStatistics struct {
+	AutoParamAttemptsPersec       uint64
+	BatchRequestsPersec           uint64
+	Caption                       string
+	Description                   string
+	FailedAutoParamsPersec        uint64
+	ForcedParameterizationsPersec uint64
+	Frequency_Object              uint64
+	Frequency_PerfTime            uint64
+	Frequency_Sys100NS            uint64
+	GuidedplanexecutionsPersec    uint64
+	MisguidedplanexecutionsPersec uint64
+	Name                          string
+	SafeAutoParamsPersec          uint64
+	SQLAttentionrate              uint64
+	SQLCompilationsPersec         uint64
+	SQLReCompilationsPersec       uint64
+	Timestamp_Object              uint64
+	Timestamp_PerfTime            uint64
+	Timestamp_Sys100NS            uint64
+	UnsafeAutoParamsPersec        uint64
+}
+
+type Win32_PerfRawData_MSSQLSERVER_SQLServerLocks struct {
+	AverageWaitTimems          uint64
+	AverageWaitTimems_Base     uint32
+	Caption                    string
+	Description                string
+	Frequency_Object           uint64
+	Frequency_PerfTime         uint64
+	Frequency_Sys100NS         uint64
+	LockRequestsPersec         uint64
+	LockTimeoutsPersec         uint64
+	LockTimeoutstimeout0Persec uint64
+	LockWaitsPersec            uint64
+	LockWaitTimems             uint64
+	Name                       string
+	NumberofDeadlocksPersec    uint64
+	Timestamp_Object           uint64
+	Timestamp_PerfTime         uint64
+	Timestamp_Sys100NS         uint64
+}
+
+type WorkerProcess struct {
+	AppPoolName string
+	Guid        string
+	ProcessId   uint32
+}
