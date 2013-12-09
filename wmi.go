@@ -121,7 +121,7 @@ func (e *ErrFieldMismatch) Error() string {
 var timeType = reflect.TypeOf(time.Time{})
 
 // loadEntity loads a SWbemObject into a struct pointer.
-func loadEntity(dst interface{}, src *ole.IDispatch) error {
+func loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismatch error) {
 	v := reflect.ValueOf(dst).Elem()
 	for i := 0; i < v.NumField(); i++ {
 		f := v.Field(i)
@@ -135,6 +135,11 @@ func loadEntity(dst interface{}, src *ole.IDispatch) error {
 		}
 		prop, err := oleutil.GetProperty(src, n)
 		if err != nil {
+			errFieldMismatch = &ErrFieldMismatch{
+				StructType: f.Type(),
+				FieldName:  n,
+				Reason:     "no such struct field",
+			}
 			continue
 		}
 		switch val := prop.Value(); reflect.ValueOf(val).Kind() {
@@ -195,7 +200,7 @@ func loadEntity(dst interface{}, src *ole.IDispatch) error {
 			}
 		}
 	}
-	return nil
+	return errFieldMismatch
 }
 
 type multiArgType int
