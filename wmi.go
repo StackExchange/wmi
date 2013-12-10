@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"reflect"
-	"runtime"
 	"strconv"
 	"time"
 
@@ -37,10 +36,8 @@ func QueryNamespace(query string, dst interface{}, namespace string) error {
 // changed using connectServerArgs. See
 // http://msdn.microsoft.com/en-us/library/aa393720.aspx for details.
 func Query(query string, dst interface{}, connectServerArgs ...interface{}) error {
-	runtime.LockOSThread()
 	ole.CoInitialize(0)
 	defer ole.CoUninitialize()
-	defer runtime.UnlockOSThread()
 
 	dv := reflect.ValueOf(dst)
 	if dv.Kind() != reflect.Ptr || dv.IsNil() {
