@@ -15,11 +15,6 @@ import (
 
 var l = log.New(os.Stdout, "", log.LstdFlags)
 
-func init() {
-	ole.CoInitializeEx(0, 0)
-	// todo: determine when/if to call ole.CoUninitialize()
-}
-
 var (
 	ErrInvalidEntityType = errors.New("wmi: invalid entity type")
 )
@@ -28,7 +23,10 @@ func QueryNamespace(query string, dst interface{}, namespace string) error {
 	return Query(query, dst, nil, namespace)
 }
 
-func Query(query string, dst interface{}, connectServerArgs... interface{}) error {
+func Query(query string, dst interface{}, connectServerArgs ...interface{}) error {
+	ole.CoInitialize(0)
+	defer ole.CoUninitialize()
+
 	dv := reflect.ValueOf(dst)
 	if dv.Kind() != reflect.Ptr || dv.IsNil() {
 		return ErrInvalidEntityType
