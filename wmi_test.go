@@ -27,6 +27,19 @@ func TestFieldMismatch(t *testing.T) {
 	}
 }
 
+func TestNamespace(t *testing.T) {
+	var dst []Win32_Process
+	err := QueryNamespace("SELECT * FROM Win32_Process", &dst, `root\CIMV2`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dst = nil
+	err = QueryNamespace("SELECT * FROM Win32_Process", &dst, `broken\nothing`)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
 func _TestMany(t *testing.T) {
 	go func() {
 		for i := 0; true; i++ {

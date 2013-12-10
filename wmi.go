@@ -24,7 +24,11 @@ var (
 	ErrInvalidEntityType = errors.New("wmi: invalid entity type")
 )
 
-func Query(query string, dst interface{}) error {
+func QueryNamespace(query string, dst interface{}, namespace string) error {
+	return Query(query, dst, nil, namespace)
+}
+
+func Query(query string, dst interface{}, connectServerArgs... interface{}) error {
 	dv := reflect.ValueOf(dst)
 	if dv.Kind() != reflect.Ptr || dv.IsNil() {
 		return ErrInvalidEntityType
@@ -48,7 +52,7 @@ func Query(query string, dst interface{}) error {
 	defer wmi.Release()
 
 	// service is a SWbemServices
-	serviceRaw, err := oleutil.CallMethod(wmi, "ConnectServer")
+	serviceRaw, err := oleutil.CallMethod(wmi, "ConnectServer", connectServerArgs...)
 	if err != nil {
 		return err
 	}
