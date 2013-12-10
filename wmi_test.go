@@ -2,6 +2,7 @@ package wmi
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 )
@@ -40,28 +41,33 @@ func TestNamespace(t *testing.T) {
 	}
 }
 
-func _TestMany(t *testing.T) {
+func TestMany(t *testing.T) {
+	limit := 500
+	wg := sync.WaitGroup{}
+	wg.Add(2)
 	go func() {
-		for i := 0; true; i++ {
+		for i := 0; i < limit; i++ {
 			fmt.Println(i)
 			var dst []Win32_PerfRawData_PerfDisk_LogicalDisk
 			err := Query("SELECT * FROM Win32_PerfRawData_PerfDisk_LogicalDisk", &dst)
 			if err != nil {
-				l.Fatal("disk", err)
+				fmt.Println("disk", err)
 			}
 		}
+		wg.Done()
 	}()
 	go func() {
-		for i := 0; true; i-- {
+		for i := 0; i > -limit; i-- {
 			fmt.Println(i)
 			var dst []Win32_OperatingSystem
 			err := Query("SELECT * FROM Win32_OperatingSystem", &dst)
 			if err != nil {
-				l.Fatal("OS", err)
+				fmt.Println("OS", err)
 			}
 		}
+		wg.Done()
 	}()
-	select {}
+	wg.Wait()
 }
 
 type Win32_Process struct {
