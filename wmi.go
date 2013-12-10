@@ -24,7 +24,7 @@ var (
 	ErrInvalidEntityType = errors.New("wmi: invalid entity type")
 )
 
-func Query(namespace, query string, dst interface{}) error {
+func Query(query string, dst interface{}) error {
 	dv := reflect.ValueOf(dst)
 	if dv.Kind() != reflect.Ptr || dv.IsNil() {
 		return ErrInvalidEntityType
@@ -47,10 +47,8 @@ func Query(namespace, query string, dst interface{}) error {
 	}
 	defer wmi.Release()
 
-	const CIMV2 = "root\\cimv2"
-
 	// service is a SWbemServices
-	serviceRaw, err := oleutil.CallMethod(wmi, "ConnectServer", ".")
+	serviceRaw, err := oleutil.CallMethod(wmi, "ConnectServer")
 	if err != nil {
 		return err
 	}
