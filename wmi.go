@@ -1,3 +1,4 @@
+// Package wmi provides a WQL interface for WMI on Windows.
 package wmi
 
 import (
@@ -19,10 +20,21 @@ var (
 	ErrInvalidEntityType = errors.New("wmi: invalid entity type")
 )
 
+// QueryNamespace invokes Query with the given namespace on the local machine.
 func QueryNamespace(query string, dst interface{}, namespace string) error {
 	return Query(query, dst, nil, namespace)
 }
 
+// Query runs the WQL query and appends the values to dst.
+//
+// dst must have type *[]S or *[]*S, for some struct type S. Fields selected in
+// the query must have the same name in dst. Supported types are all signed and
+// unsigned integers, time.Time, string, bool. Array types are not supported.
+// See wmi_test.go for some examples.
+//
+// By default, the local machine and default namespace are used. These can be
+// changed using connectServerArgs. See
+// http://msdn.microsoft.com/en-us/library/aa393720.aspx for details.
 func Query(query string, dst interface{}, connectServerArgs ...interface{}) error {
 	ole.CoInitialize(0)
 	defer ole.CoUninitialize()
