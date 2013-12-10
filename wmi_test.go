@@ -41,6 +41,29 @@ func TestNamespace(t *testing.T) {
 	}
 }
 
+func TestCreateQuery(t *testing.T) {
+	type TestStruct struct {
+		Name  string
+		Count int
+	}
+	var dst []TestStruct
+	output := "SELECT Name, Count FROM TestStruct"
+	tests := []interface{}{
+		&dst,
+		dst,
+		TestStruct{},
+		&TestStruct{},
+	}
+	for i, test := range tests {
+		if o := CreateQuery(test, ""); o != output {
+			t.Error("bad output on", i, o)
+		}
+	}
+	if CreateQuery(3, "") != "" {
+		t.Error("expected empty string")
+	}
+}
+
 func TestMany(t *testing.T) {
 	limit := 500
 	wg := sync.WaitGroup{}

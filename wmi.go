@@ -9,6 +9,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	ole "github.com/mjibson/go-ole"
@@ -256,24 +257,24 @@ func oleInt64(item *ole.IDispatch, prop string) (int64, error) {
 	return i, nil
 }
 
-func CreateQuery(t interface{}, where string) string {
+func CreateQuery(src interface{}, where string) string {
 	var b bytes.Buffer
 	b.WriteString("SELECT ")
-
-	s := reflect.ValueOf(t).Elem()
-
-	typeOfT := s.Type()
-	//Since we generally pass slices, this function takes the underlying or contained type of the slice
-	ContainedtypeOfT := typeOfT.Elem()
-
-	for i := 0; i < ContainedtypeOfT.NumField()-1; i++ {
-		b.WriteString(fmt.Sprintf("%s, ", ContainedtypeOfT.Field(i).Name))
+	s := reflect.Indirect(reflect.ValueOf(src))
+	t := s.Type()
+	if s.Kind() == reflect.Slice {
+		t = t.Elem()
 	}
-
-	//Last one has no Comma
-	b.WriteString(fmt.Sprintf("%s ", ContainedtypeOfT.Field(ContainedtypeOfT.NumField()-1).Name))
-
-	b.WriteString(fmt.Sprintf("FROM %s ", ContainedtypeOfT.Name()))
+	if t.Kind() != reflect.Struct {
+		return ""
+	}
+	var fields []string
+	for i := 0; i < t.NumField(); i++ {
+		fields = append(fields, t.Field(i).Name)
+	}
+	b.WriteString(strings.Join(fields, ", "))
+	b.WriteString(" FROM ")
+	b.WriteString(t.Name())
 	b.WriteString(where)
-	return (b.String())
+	return b.String()
 }
