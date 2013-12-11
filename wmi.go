@@ -27,7 +27,7 @@ var (
 func init() {
 	go func() {
 		runtime.LockOSThread()
-		ole.CoInitializeEx(0, 2)
+		ole.CoInitializeEx(0, 0)
 		for f := range mainfunc {
 			f()
 		}
