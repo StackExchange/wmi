@@ -68,13 +68,15 @@ func TestCreateQuery(t *testing.T) {
 }
 
 func TestMany(t *testing.T) {
+	limit := 5000
+	fmt.Println("running until:", limit)
+	fmt.Println("No panics mean it succeeded. Other errors are OK.")
 	runtime.GOMAXPROCS(2)
-	limit := 500
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 	go func() {
 		for i := 0; i < limit; i++ {
-			if i % 25 == 0 {
+			if i%25 == 0 {
 				fmt.Println(i)
 			}
 			var dst []Win32_PerfRawData_PerfDisk_LogicalDisk
@@ -88,7 +90,7 @@ func TestMany(t *testing.T) {
 	}()
 	go func() {
 		for i := 0; i > -limit; i-- {
-			if i % 25 == 0 {
+			if i%25 == 0 {
 				fmt.Println(i)
 			}
 			var dst []Win32_OperatingSystem
