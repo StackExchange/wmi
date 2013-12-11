@@ -45,7 +45,7 @@ func do(f func() error) (err error) {
 		done <- true
 	}
 	<-done
-	return err
+	return
 }
 
 // QueryNamespace invokes Query with the given namespace on the local machine.
@@ -65,8 +65,13 @@ var lock = sync.Mutex{}
 // By default, the local machine and default namespace are used. These can be
 // changed using connectServerArgs. See
 // http://msdn.microsoft.com/en-us/library/aa393720.aspx for details.
-func Query(query string, dst interface{}, connectServerArgs ...interface{}) error {
+func Query(query string, dst interface{}, connectServerArgs ...interface{}) (queryErr error) {
 	f := func() error {
+		defer func() {
+			if e := recover(); e != nil {
+				queryErr = e.(error)
+			}
+		}()
 		dv := reflect.ValueOf(dst)
 		if dv.Kind() != reflect.Ptr || dv.IsNil() {
 			return ErrInvalidEntityType
@@ -144,7 +149,11 @@ func Query(query string, dst interface{}, connectServerArgs ...interface{}) erro
 		}
 		return errFieldMismatch
 	}
-	return do(f)
+	r := do(f)
+	if r != nil && queryErr == nil {
+		queryErr = r
+	}
+	return
 }
 
 // ErrFieldMismatch is returned when a field is to be loaded into a different
