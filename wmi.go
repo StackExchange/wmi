@@ -67,11 +67,6 @@ var lock = sync.Mutex{}
 // http://msdn.microsoft.com/en-us/library/aa393720.aspx for details.
 func Query(query string, dst interface{}, connectServerArgs ...interface{}) (queryErr error) {
 	f := func() error {
-		defer func() {
-			if e := recover(); e != nil {
-				queryErr = e.(error)
-			}
-		}()
 		dv := reflect.ValueOf(dst)
 		if dv.Kind() != reflect.Ptr || dv.IsNil() {
 			return ErrInvalidEntityType
