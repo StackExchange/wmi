@@ -74,24 +74,28 @@ func TestMany(t *testing.T) {
 	wg.Add(2)
 	go func() {
 		for i := 0; i < limit; i++ {
-			fmt.Println(i)
+			if i % 25 == 0 {
+				fmt.Println(i)
+			}
 			var dst []Win32_PerfRawData_PerfDisk_LogicalDisk
 			q := CreateQuery(&dst, "")
 			err := Query(q, &dst)
 			if err != nil {
-				fmt.Println("disk", err)
+				fmt.Println("ERROR disk", err)
 			}
 		}
 		wg.Done()
 	}()
 	go func() {
 		for i := 0; i > -limit; i-- {
-			fmt.Println(i)
+			if i % 25 == 0 {
+				fmt.Println(i)
+			}
 			var dst []Win32_OperatingSystem
 			q := CreateQuery(&dst, "")
 			err := Query(q, &dst)
 			if err != nil {
-				fmt.Println("OS", err)
+				fmt.Println("ERROR OS", err)
 			}
 		}
 		wg.Done()
