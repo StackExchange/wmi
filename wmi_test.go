@@ -2,6 +2,7 @@ package wmi
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
 	"testing"
 	"time"
@@ -67,6 +68,7 @@ func TestCreateQuery(t *testing.T) {
 }
 
 func TestMany(t *testing.T) {
+	runtime.GOMAXPROCS(2)
 	limit := 500
 	wg := sync.WaitGroup{}
 	wg.Add(2)
