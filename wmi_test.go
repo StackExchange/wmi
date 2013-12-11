@@ -50,7 +50,7 @@ func TestCreateQuery(t *testing.T) {
 		Count int
 	}
 	var dst []TestStruct
-	output := "SELECT Name, Count FROM TestStruct"
+	output := "SELECT Name, Count FROM TestStruct WHERE Count > 2"
 	tests := []interface{}{
 		&dst,
 		dst,
@@ -58,7 +58,7 @@ func TestCreateQuery(t *testing.T) {
 		&TestStruct{},
 	}
 	for i, test := range tests {
-		if o := CreateQuery(test, ""); o != output {
+		if o := CreateQuery(test, "WHERE Count > 2"); o != output {
 			t.Error("bad output on", i, o)
 		}
 	}

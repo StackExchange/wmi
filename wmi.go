@@ -312,6 +312,6 @@ func CreateQuery(src interface{}, where string) string {
 	b.WriteString(strings.Join(fields, ", "))
 	b.WriteString(" FROM ")
 	b.WriteString(t.Name())
-	b.WriteString(where)
+	b.WriteString(" " + where)
 	return b.String()
 }
