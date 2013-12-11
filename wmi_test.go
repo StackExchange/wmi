@@ -9,7 +9,8 @@ import (
 
 func TestQuery(t *testing.T) {
 	var dst []Win32_Process
-	err := Query("SELECT * FROM Win32_Process", &dst)
+	q := CreateQuery(&dst, "")
+	err := Query(q, &dst)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -30,12 +31,13 @@ func TestFieldMismatch(t *testing.T) {
 
 func TestNamespace(t *testing.T) {
 	var dst []Win32_Process
-	err := QueryNamespace("SELECT * FROM Win32_Process", &dst, `root\CIMV2`)
+	q := CreateQuery(&dst, "")
+	err := QueryNamespace(q, &dst, `root\CIMV2`)
 	if err != nil {
 		t.Fatal(err)
 	}
 	dst = nil
-	err = QueryNamespace("SELECT * FROM Win32_Process", &dst, `broken\nothing`)
+	err = QueryNamespace(q, &dst, `broken\nothing`)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -72,7 +74,8 @@ func TestMany(t *testing.T) {
 		for i := 0; i < limit; i++ {
 			fmt.Println(i)
 			var dst []Win32_PerfRawData_PerfDisk_LogicalDisk
-			err := Query("SELECT * FROM Win32_PerfRawData_PerfDisk_LogicalDisk", &dst)
+			q := CreateQuery(&dst, "")
+			err := Query(q, &dst)
 			if err != nil {
 				fmt.Println("disk", err)
 			}
@@ -83,7 +86,8 @@ func TestMany(t *testing.T) {
 		for i := 0; i > -limit; i-- {
 			fmt.Println(i)
 			var dst []Win32_OperatingSystem
-			err := Query("SELECT * FROM Win32_OperatingSystem", &dst)
+			q := CreateQuery(&dst, "")
+			err := Query(q, &dst)
 			if err != nil {
 				fmt.Println("OS", err)
 			}
