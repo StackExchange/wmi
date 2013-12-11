@@ -65,7 +65,13 @@ var lock = sync.Mutex{}
 // By default, the local machine and default namespace are used. These can be
 // changed using connectServerArgs. See
 // http://msdn.microsoft.com/en-us/library/aa393720.aspx for details.
-func Query(query string, dst interface{}, connectServerArgs ...interface{}) (queryErr error) {
+func Query(query string, dst interface{}, connectServerArgs ...interface{}) error {
+	lock.Lock()
+	defer lock.Unlock()
+	return runQuery(query, dst, connectServerArgs...)
+}
+
+func runQuery(query string, dst interface{}, connectServerArgs ...interface{}) (queryErr error) {
 	f := func() error {
 		dv := reflect.ValueOf(dst)
 		if dv.Kind() != reflect.Ptr || dv.IsNil() {
