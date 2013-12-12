@@ -1,7 +1,9 @@
 package wmi
 
 import (
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"runtime"
 	"sync"
 	"testing"
@@ -27,6 +29,36 @@ func TestFieldMismatch(t *testing.T) {
 	err := Query("SELECT Name, HandleCount FROM Win32_Process", &dst)
 	if err == nil || err.Error() != `wmi: cannot load field "Blah" into a "uint32": no such struct field` {
 		t.Error("Expected err field mismatch")
+	}
+}
+
+func TestStrings(t *testing.T) {
+	var dst []struct{
+		CSName string
+		WindowsVersion string
+	}
+	q := "Select CSName, WindowsVersion from Win32_Process"
+	for i := 0; i < 5000; i++ {
+		err := Query(q, &dst)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for di, d := range dst {
+			v := reflect.ValueOf(d)
+			for j := 0; j < v.NumField(); j++ {
+				f := v.Field(j)
+				if f.Kind() != reflect.String {
+					continue
+				}
+				s := f.Interface().(string)
+				if len(s) > 0 && s[0] == '\u0000' {
+					b, _ := json.MarshalIndent(d, "", "  ")
+					_, _ = b, di
+					t.Log(string(b))
+					t.Error("bad string in iteration", i, "row", di, "of", len(dst))
+				}
+			}
+		}
 	}
 }
 
