@@ -99,7 +99,7 @@ func TestCreateQuery(t *testing.T) {
 	}
 }
 
-func TestMany(t *testing.T) {
+func _TestMany(t *testing.T) {
 	limit := 5000
 	fmt.Println("running until:", limit)
 	fmt.Println("No panics mean it succeeded. Other errors are OK.")
