@@ -33,8 +33,8 @@ func TestFieldMismatch(t *testing.T) {
 }
 
 func TestStrings(t *testing.T) {
-	var dst []struct{
-		CSName string
+	var dst []struct {
+		CSName         string
 		WindowsVersion string
 	}
 	q := "Select CSName, WindowsVersion from Win32_Process"
