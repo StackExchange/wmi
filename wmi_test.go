@@ -43,6 +43,7 @@ func TestStrings(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		e := false
 		for di, d := range dst {
 			v := reflect.ValueOf(d)
 			for j := 0; j < v.NumField(); j++ {
@@ -56,8 +57,12 @@ func TestStrings(t *testing.T) {
 					_, _ = b, di
 					t.Log(string(b))
 					t.Error("bad string in iteration", i, "row", di, "of", len(dst))
+					e = true
 				}
 			}
+		}
+		if e {
+			break
 		}
 	}
 }
