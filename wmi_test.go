@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
+	"runtime/debug"
 	"sync"
 	"testing"
 	"time"
@@ -33,38 +34,47 @@ func TestFieldMismatch(t *testing.T) {
 }
 
 func TestStrings(t *testing.T) {
-	var dst []struct {
-		CSName         string
-		WindowsVersion string
-	}
-	q := "Select CSName, WindowsVersion from Win32_Process"
-	for i := 0; i < 5000; i++ {
-		err := Query(q, &dst)
-		if err != nil {
-			t.Fatal(err)
-		}
-		e := false
-		for di, d := range dst {
-			v := reflect.ValueOf(d)
-			for j := 0; j < v.NumField(); j++ {
-				f := v.Field(j)
-				if f.Kind() != reflect.String {
-					continue
-				}
-				s := f.Interface().(string)
-				if len(s) > 0 && s[0] == '\u0000' {
-					b, _ := json.MarshalIndent(d, "", "  ")
-					_, _ = b, di
-					t.Log(string(b))
-					t.Error("bad string in iteration", i, "row", di, "of", len(dst))
-					e = true
+	printed := false
+	f := func() {
+		var dst []Win32_Process
+		zeros := 0
+		q := CreateQuery(&dst, "")
+		for i := 0; i < 5; i++ {
+			fmt.Println("iter", i, "zeros:", zeros)
+			err := Query(q, &dst)
+			if err != nil {
+				t.Fatal(err, q)
+			}
+			for _, d := range dst {
+				v := reflect.ValueOf(d)
+				for j := 0; j < v.NumField(); j++ {
+					f := v.Field(j)
+					if f.Kind() != reflect.String {
+						continue
+					}
+					s := f.Interface().(string)
+					if len(s) > 0 && s[0] == '\u0000' {
+						zeros++
+						if !printed {
+							printed = true
+							j, _ := json.MarshalIndent(&d, "", "  ")
+							t.Log("Example with \\u0000:\n", string(j))
+						}
+					}
 				}
 			}
 		}
-		if e {
-			break
+		if zeros > 0 {
+			t.Error("> 0 zeros")
 		}
 	}
+
+	fmt.Println("Disabling GC")
+	debug.SetGCPercent(-1)
+	f()
+	fmt.Println("Enabling GC")
+	debug.SetGCPercent(100)
+	f()
 }
 
 func TestNamespace(t *testing.T) {
