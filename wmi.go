@@ -316,3 +316,61 @@ func CreateQuery(src interface{}, where string) string {
 	b.WriteString(" " + where)
 	return b.String()
 }
+
+func QueryGen(query string, columns []string, connectServerArgs ...interface{}) ([]map[string]interface{}, error) {
+	var res []map[string]interface{}
+	ole.CoInitializeEx(0, 0)
+	unknown, err := oleutil.CreateObject("WbemScripting.SWbemLocator")
+	if err != nil {
+		return nil, err
+	}
+	defer unknown.Release()
+
+	wmi, err := unknown.QueryInterface(ole.IID_IDispatch)
+	if err != nil {
+		return nil, err
+	}
+	defer wmi.Release()
+
+	// service is a SWbemServices
+	serviceRaw, err := oleutil.CallMethod(wmi, "ConnectServer", connectServerArgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	service := serviceRaw.ToIDispatch()
+	defer service.Release()
+
+	// result is a SWBemObjectSet
+	resultRaw, err := oleutil.CallMethod(service, "ExecQuery", query)
+	if err != nil {
+		return nil, err
+	}
+	result := resultRaw.ToIDispatch()
+	defer result.Release()
+
+	count, err := oleInt64(result, "Count")
+	if err != nil {
+		return nil, err
+	}
+
+	for i := int64(0); i < count; i++ {
+		// item is a SWbemObject, but really a Win32_Process
+		itemRaw, err := oleutil.CallMethod(result, "ItemIndex", i)
+		if err != nil {
+			return nil, err
+		}
+		item := itemRaw.ToIDispatch()
+		defer item.Release()
+		m := make(map[string]interface{})
+		for _, c := range columns {
+			prop, err := oleutil.GetProperty(item, c)
+			if err != nil {
+				return nil, err
+			}
+			m[c] = prop.Value()
+		}
+		res = append(res, m)
+	}
+	return res, nil
+}
