@@ -2,6 +2,7 @@ package wmi
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strconv"
 	"time"
@@ -11,10 +12,14 @@ import (
 )
 
 func LoadJSON(data []byte, dst interface{}) error {
-	var m []map[string]interface{}
-	if err := json.Unmarshal(data, &m); err != nil {
+	var r Response
+	if err := json.Unmarshal(data, &r); err != nil {
 		return err
 	}
+	if len(r.Error) > 0 {
+		return fmt.Errorf(r.Error)
+	}
+	m := r.Response
 	dv := reflect.ValueOf(dst)
 	if dv.Kind() != reflect.Ptr || dv.IsNil() {
 		return ErrInvalidEntityType
@@ -184,4 +189,14 @@ func QueryGen(query string, columns []string, connectServerArgs ...interface{}) 
 		res = append(res, m)
 	}
 	return res, nil
+}
+
+type WmiQuery struct {
+	Query     string
+	Namespace string
+}
+
+type Response struct {
+	Error    string
+	Response []map[string]interface{}
 }
