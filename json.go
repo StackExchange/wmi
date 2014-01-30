@@ -197,6 +197,6 @@ type WmiQuery struct {
 }
 
 type Response struct {
-	Error    string
+	Error    string `json:",omitempty"`
 	Response []map[string]interface{}
 }
