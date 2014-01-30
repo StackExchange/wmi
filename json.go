@@ -87,6 +87,22 @@ func loadMap(dst interface{}, src map[string]interface{}) (errFieldMismatch erro
 					Reason:     "not an integer class",
 				}
 			}
+		case reflect.Float64:
+			iv := val.(float64)
+			switch f.Kind() {
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				f.SetInt(int64(iv))
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				f.SetUint(uint64(iv))
+			case reflect.Float32, reflect.Float64:
+				f.SetFloat(iv)
+			default:
+				return &ErrFieldMismatch{
+					StructType: f.Type(),
+					FieldName:  n,
+					Reason:     "not a number class",
+				}
+			}
 		case reflect.String:
 			sv := val.(string)
 			iv, err := strconv.ParseInt(sv, 10, 64)
