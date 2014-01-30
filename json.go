@@ -128,6 +128,8 @@ func loadMap(dst interface{}, src map[string]interface{}) (errFieldMismatch erro
 					Reason:     "not a bool",
 				}
 			}
+		default:
+			return fmt.Errorf("wmi: could not unmarshal %v with type %v", n, reflect.TypeOf(val))
 		}
 	}
 	return errFieldMismatch
