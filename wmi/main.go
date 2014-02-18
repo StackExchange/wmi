@@ -51,7 +51,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	b, err := json.Marshal(r[:1])
+	b, err := json.Marshal(r)
 	if err != nil {
 		log.Fatal(err)
 	}
