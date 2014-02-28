@@ -18,7 +18,6 @@ import (
 	"log"
 	"os"
 	"reflect"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -33,30 +32,6 @@ var l = log.New(os.Stdout, "", log.LstdFlags)
 var (
 	ErrInvalidEntityType = errors.New("wmi: invalid entity type")
 )
-
-func init() {
-	go func() {
-		runtime.LockOSThread()
-		ole.CoInitializeEx(0, 0)
-		for f := range mainfunc {
-			f()
-		}
-	}()
-}
-
-// queue of work to run in main thread.
-var mainfunc = make(chan func())
-
-// do runs f on the main thread.
-func do(f func() error) (err error) {
-	done := make(chan bool, 1)
-	mainfunc <- func() {
-		err = f()
-		done <- true
-	}
-	<-done
-	return
-}
 
 // QueryNamespace invokes Query with the given namespace on the local machine.
 func QueryNamespace(query string, dst interface{}, namespace string) error {
@@ -160,7 +135,9 @@ func runQuery(query string, dst interface{}, connectServerArgs ...interface{}) (
 		}
 		return errFieldMismatch
 	}
-	r := do(f)
+	ole.CoInitializeEx(0, 0)
+	defer ole.CoUninitialize()
+	r := f()
 	if r != nil && queryErr == nil {
 		queryErr = r
 	}
