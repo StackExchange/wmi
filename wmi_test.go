@@ -40,7 +40,6 @@ func TestStrings(t *testing.T) {
 		zeros := 0
 		q := CreateQuery(&dst, "")
 		for i := 0; i < 5; i++ {
-			fmt.Println("iter", i, "zeros:", zeros)
 			err := Query(q, &dst)
 			if err != nil {
 				t.Fatal(err, q)
@@ -63,6 +62,7 @@ func TestStrings(t *testing.T) {
 					}
 				}
 			}
+			fmt.Println("iter", i, "zeros:", zeros)
 		}
 		if zeros > 0 {
 			t.Error("> 0 zeros")
