@@ -1,3 +1,18 @@
+/*
+
+Wmi executes WQL queries using WMI on Windows.
+
+Output is JSON written to stdout.
+
+Usage:
+	wmi [-n=namespace] query string
+
+The query string should not be quoted. Columns must be specified (* is not supported).
+
+Example:
+	wmi SELECT Name, HandleCount FROM Win32_Process
+
+*/
 package main
 
 import (
