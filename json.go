@@ -55,6 +55,12 @@ func loadMap(dst interface{}, src map[string]interface{}) (errFieldMismatch erro
 	v := reflect.ValueOf(dst).Elem()
 	for i := 0; i < v.NumField(); i++ {
 		f := v.Field(i)
+		isPtr := f.Kind() == reflect.Ptr
+		if isPtr {
+			ptr := reflect.New(f.Type().Elem())
+			f.Set(ptr)
+			f = f.Elem()
+		}
 		n := v.Type().Field(i).Name
 		if !f.CanSet() {
 			return &ErrFieldMismatch{
@@ -145,7 +151,11 @@ func loadMap(dst interface{}, src map[string]interface{}) (errFieldMismatch erro
 				}
 			}
 		default:
-			return fmt.Errorf("wmi: could not unmarshal %v with type %v", n, reflect.TypeOf(val))
+			typeof := reflect.TypeOf(val)
+			if isPtr && typeof == nil {
+				break
+			}
+			return fmt.Errorf("wmi: could not unmarshal %v with type %v", n, typeof)
 		}
 	}
 	return errFieldMismatch
