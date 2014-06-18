@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	ole "github.com/mjibson/go-ole"
-	"github.com/mjibson/go-ole/oleutil"
+	"github.com/mattn/go-ole"
+	"github.com/mattn/go-ole/oleutil"
 )
 
 func LoadJSON(data []byte, dst interface{}) error {

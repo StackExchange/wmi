@@ -23,8 +23,8 @@ import (
 	"sync"
 	"time"
 
-	ole "github.com/mjibson/go-ole"
-	"github.com/mjibson/go-ole/oleutil"
+	"github.com/mattn/go-ole"
+	"github.com/mattn/go-ole/oleutil"
 )
 
 var l = log.New(os.Stdout, "", log.LstdFlags)
