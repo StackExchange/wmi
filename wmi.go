@@ -149,6 +149,12 @@ func loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismatch error) {
 	v := reflect.ValueOf(dst).Elem()
 	for i := 0; i < v.NumField(); i++ {
 		f := v.Field(i)
+		isPtr := f.Kind() == reflect.Ptr
+		if isPtr {
+			ptr := reflect.New(f.Type().Elem())
+			f.Set(ptr)
+			f = f.Elem()
+		}
 		n := v.Type().Field(i).Name
 		if !f.CanSet() {
 			return &ErrFieldMismatch{
@@ -221,6 +227,16 @@ func loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismatch error) {
 					FieldName:  n,
 					Reason:     "not a bool",
 				}
+			}
+		default:
+			typeof := reflect.TypeOf(val)
+			if isPtr && typeof == nil {
+				break
+			}
+			return &ErrFieldMismatch{
+				StructType: f.Type(),
+				FieldName:  n,
+				Reason:     "unsupported type",
 			}
 		}
 	}
