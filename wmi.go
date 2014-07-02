@@ -1,14 +1,4 @@
-/*
-Package wmi provides a WQL interface for WMI on Windows.
-
-Warning
-
-Due to a memory bug (https://github.com/mattn/go-ole/issues/13) only use the wmi
-package in its own executable and never within a package. This executable must
-disable the GC and should either exit after running a query or safely exit after
-running N queries (since memory use will go up). See this github issue
-(https://github.com/StackExchange/wmi/issues/1) for more details.
-*/
+// Package wmi provides a WQL interface for WMI on Windows.
 package wmi
 
 import (
@@ -18,6 +8,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -31,14 +22,13 @@ var l = log.New(os.Stdout, "", log.LstdFlags)
 
 var (
 	ErrInvalidEntityType = errors.New("wmi: invalid entity type")
+	lock                 sync.Mutex
 )
 
 // QueryNamespace invokes Query with the given namespace on the local machine.
 func QueryNamespace(query string, dst interface{}, namespace string) error {
 	return Query(query, dst, nil, namespace)
 }
-
-var lock = sync.Mutex{}
 
 // Query runs the WQL query and appends the values to dst.
 //
@@ -53,95 +43,88 @@ var lock = sync.Mutex{}
 func Query(query string, dst interface{}, connectServerArgs ...interface{}) error {
 	lock.Lock()
 	defer lock.Unlock()
-	return runQuery(query, dst, connectServerArgs...)
-}
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 
-func runQuery(query string, dst interface{}, connectServerArgs ...interface{}) (queryErr error) {
-	f := func() error {
-		dv := reflect.ValueOf(dst)
-		if dv.Kind() != reflect.Ptr || dv.IsNil() {
-			return ErrInvalidEntityType
-		}
-		dv = dv.Elem()
-		mat, elemType := checkMultiArg(dv)
-		if mat == multiArgTypeInvalid {
-			return ErrInvalidEntityType
-		}
+	ole.CoInitializeEx(0, 0)
+	defer ole.CoUninitialize()
 
-		unknown, err := oleutil.CreateObject("WbemScripting.SWbemLocator")
-		if err != nil {
-			return err
-		}
-		defer unknown.Release()
+	dv := reflect.ValueOf(dst)
+	if dv.Kind() != reflect.Ptr || dv.IsNil() {
+		return ErrInvalidEntityType
+	}
+	dv = dv.Elem()
+	mat, elemType := checkMultiArg(dv)
+	if mat == multiArgTypeInvalid {
+		return ErrInvalidEntityType
+	}
 
-		wmi, err := unknown.QueryInterface(ole.IID_IDispatch)
-		if err != nil {
-			return err
-		}
-		defer wmi.Release()
+	unknown, err := oleutil.CreateObject("WbemScripting.SWbemLocator")
+	if err != nil {
+		return err
+	}
+	defer unknown.Release()
 
-		// service is a SWbemServices
-		serviceRaw, err := oleutil.CallMethod(wmi, "ConnectServer", connectServerArgs...)
-		if err != nil {
-			return err
-		}
-		service := serviceRaw.ToIDispatch()
-		defer service.Release()
+	wmi, err := unknown.QueryInterface(ole.IID_IDispatch)
+	if err != nil {
+		return err
+	}
+	defer wmi.Release()
 
-		// result is a SWBemObjectSet
-		resultRaw, err := oleutil.CallMethod(service, "ExecQuery", query)
-		if err != nil {
-			return err
-		}
-		result := resultRaw.ToIDispatch()
-		defer result.Release()
+	// service is a SWbemServices
+	serviceRaw, err := oleutil.CallMethod(wmi, "ConnectServer", connectServerArgs...)
+	if err != nil {
+		return err
+	}
+	service := serviceRaw.ToIDispatch()
+	defer service.Release()
 
-		count, err := oleInt64(result, "Count")
-		if err != nil {
-			return err
-		}
+	// result is a SWBemObjectSet
+	resultRaw, err := oleutil.CallMethod(service, "ExecQuery", query)
+	if err != nil {
+		return err
+	}
+	result := resultRaw.ToIDispatch()
+	defer result.Release()
 
-		var errFieldMismatch error
-		for i := int64(0); i < count; i++ {
-			err := func() error {
-				// item is a SWbemObject, but really a Win32_Process
-				itemRaw, err := oleutil.CallMethod(result, "ItemIndex", i)
-				if err != nil {
-					return err
-				}
-				item := itemRaw.ToIDispatch()
-				defer item.Release()
+	count, err := oleInt64(result, "Count")
+	if err != nil {
+		return err
+	}
 
-				ev := reflect.New(elemType)
-				if err = loadEntity(ev.Interface(), item); err != nil {
-					if _, ok := err.(*ErrFieldMismatch); ok {
-						// We continue loading entities even in the face of field mismatch errors.
-						// If we encounter any other error, that other error is returned. Otherwise,
-						// an ErrFieldMismatch is returned.
-						errFieldMismatch = err
-					} else {
-						return err
-					}
-				}
-				if mat != multiArgTypeStructPtr {
-					ev = ev.Elem()
-				}
-				dv.Set(reflect.Append(dv, ev))
-				return nil
-			}()
+	var errFieldMismatch error
+	for i := int64(0); i < count; i++ {
+		err := func() error {
+			// item is a SWbemObject, but really a Win32_Process
+			itemRaw, err := oleutil.CallMethod(result, "ItemIndex", i)
 			if err != nil {
 				return err
 			}
+			item := itemRaw.ToIDispatch()
+			defer item.Release()
+
+			ev := reflect.New(elemType)
+			if err = loadEntity(ev.Interface(), item); err != nil {
+				if _, ok := err.(*ErrFieldMismatch); ok {
+					// We continue loading entities even in the face of field mismatch errors.
+					// If we encounter any other error, that other error is returned. Otherwise,
+					// an ErrFieldMismatch is returned.
+					errFieldMismatch = err
+				} else {
+					return err
+				}
+			}
+			if mat != multiArgTypeStructPtr {
+				ev = ev.Elem()
+			}
+			dv.Set(reflect.Append(dv, ev))
+			return nil
+		}()
+		if err != nil {
+			return err
 		}
-		return errFieldMismatch
 	}
-	ole.CoInitializeEx(0, 0)
-	defer ole.CoUninitialize()
-	r := f()
-	if r != nil && queryErr == nil {
-		queryErr = r
-	}
-	return
+	return errFieldMismatch
 }
 
 // ErrFieldMismatch is returned when a field is to be loaded into a different
