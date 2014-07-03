@@ -1,4 +1,25 @@
-// Package wmi provides a WQL interface for WMI on Windows.
+/*
+Package wmi provides a WQL interface for WMI on Windows.
+
+Example code to print names of running processes:
+
+	type Win32_Process struct {
+		Name string
+	}
+
+	func main() {
+		var dst []Win32_Process
+		q := wmi.CreateQuery(&dst, "")
+		err := wmi.Query(q, &dst)
+		if err != nil {
+			log.Fatal(err)
+		}
+		for i, v := range dst {
+			println(i, v.Name)
+		}
+	}
+
+*/
 package wmi
 
 import (
@@ -281,6 +302,9 @@ func oleInt64(item *ole.IDispatch, prop string) (int64, error) {
 	return i, nil
 }
 
+// CreateQuery returns a WQL query string that queries all columns of src. where
+// is an optional string that is appended to the query, to be used with WHERE
+// clauses. In such a case, the "WHERE" string should appear at the beginning.
 func CreateQuery(src interface{}, where string) string {
 	var b bytes.Buffer
 	b.WriteString("SELECT ")
