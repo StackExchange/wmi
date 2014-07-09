@@ -11,6 +11,7 @@ import (
 	"github.com/mattn/go-ole/oleutil"
 )
 
+// LoadJSON loads JSON data into dst
 func LoadJSON(data []byte, dst interface{}) error {
 	var r Response
 	if err := json.Unmarshal(data, &r); err != nil {
@@ -161,6 +162,7 @@ func loadMap(dst interface{}, src map[string]interface{}) (errFieldMismatch erro
 	return errFieldMismatch
 }
 
+// QueryGen executes query and returns a map with keys of the columns slice.
 func QueryGen(query string, columns []string, connectServerArgs ...interface{}) ([]map[string]interface{}, error) {
 	var res []map[string]interface{}
 	ole.CoInitializeEx(0, 0)
