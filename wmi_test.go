@@ -156,18 +156,18 @@ type Win32_Process struct {
 	CSCreationClassName        string
 	CSName                     string
 	Caption                    string
-	CommandLine                string
+	CommandLine                *string
 	CreationClassName          string
-	CreationDate               time.Time
+	CreationDate               *time.Time
 	Description                string
-	ExecutablePath             string
-	ExecutionState             uint16
+	ExecutablePath             *string
+	ExecutionState             *uint16
 	Handle                     string
 	HandleCount                uint32
-	InstallDate                time.Time
+	InstallDate                *time.Time
 	KernelModeTime             uint64
-	MaximumWorkingSetSize      uint32
-	MinimumWorkingSetSize      uint32
+	MaximumWorkingSetSize      *uint32
+	MinimumWorkingSetSize      *uint32
 	Name                       string
 	OSCreationClassName        string
 	OSName                     string
@@ -189,8 +189,8 @@ type Win32_Process struct {
 	ReadOperationCount         uint64
 	ReadTransferCount          uint64
 	SessionId                  uint32
-	Status                     string
-	TerminationDate            time.Time
+	Status                     *string
+	TerminationDate            *time.Time
 	ThreadCount                uint32
 	UserModeTime               uint64
 	VirtualSize                uint64
