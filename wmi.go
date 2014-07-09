@@ -1,6 +1,16 @@
 /*
 Package wmi provides a WQL interface for WMI on Windows.
 
+WARNING
+
+Due to a bug, WMI resources are not returned to the OS and will leak memory.
+Since the memory was allocated through the OS and not the go runtime, it does
+not appear in the go memory stats. Long-running programs invoking WMI should
+shut themselves down routinely or call out to another program to perform WMI
+calls.
+
+Example
+
 Example code to print names of running processes:
 
 	type Win32_Process struct {
