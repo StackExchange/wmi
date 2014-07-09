@@ -1,4 +1,4 @@
 wmi
 ===
 
-WMI interface for Go with a database/sql interface
+Package wmi provides a WQL interface for WMI on Windows.
