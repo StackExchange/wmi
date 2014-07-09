@@ -62,14 +62,6 @@ func QueryNamespace(query string, dst interface{}, namespace string) error {
 // changed using connectServerArgs. See
 // http://msdn.microsoft.com/en-us/library/aa393720.aspx for details.
 func Query(query string, dst interface{}, connectServerArgs ...interface{}) error {
-	lock.Lock()
-	defer lock.Unlock()
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
-
-	ole.CoInitializeEx(0, 0)
-	defer ole.CoUninitialize()
-
 	dv := reflect.ValueOf(dst)
 	if dv.Kind() != reflect.Ptr || dv.IsNil() {
 		return ErrInvalidEntityType
@@ -79,6 +71,14 @@ func Query(query string, dst interface{}, connectServerArgs ...interface{}) erro
 	if mat == multiArgTypeInvalid {
 		return ErrInvalidEntityType
 	}
+
+	lock.Lock()
+	defer lock.Unlock()
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
+	ole.CoInitializeEx(0, 0)
+	defer ole.CoUninitialize()
 
 	unknown, err := oleutil.CreateObject("WbemScripting.SWbemLocator")
 	if err != nil {
