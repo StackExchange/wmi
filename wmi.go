@@ -87,8 +87,19 @@ func Query(query string, dst interface{}, connectServerArgs ...interface{}) erro
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
-	ole.CoInitializeEx(0, 0)
-	defer ole.CoUninitialize()
+	err := ole.CoInitializeEx(0, ole.COINIT_MULTITHREADED)
+	if err != nil {
+		oleerr := err.(*ole.OleError)
+		// S_FALSE           = 0x00000001 // CoInitializeEx was already called on this thread
+		if oleerr.Code() != ole.S_OK && oleerr.Code() != 0x00000001 {
+			return err
+		}
+	} else {
+		// Only invoke CoUninitialize if the thread was not initizlied before.
+		// This will allow other go packages based on go-ole play along
+		// with this library.
+		defer ole.CoUninitialize()
+	}
 
 	unknown, err := oleutil.CreateObject("WbemScripting.SWbemLocator")
 	if err != nil {
@@ -108,7 +119,7 @@ func Query(query string, dst interface{}, connectServerArgs ...interface{}) erro
 		return err
 	}
 	service := serviceRaw.ToIDispatch()
-	defer service.Release()
+	defer serviceRaw.Clear()
 
 	// result is a SWBemObjectSet
 	resultRaw, err := oleutil.CallMethod(service, "ExecQuery", query)
@@ -116,12 +127,15 @@ func Query(query string, dst interface{}, connectServerArgs ...interface{}) erro
 		return err
 	}
 	result := resultRaw.ToIDispatch()
-	defer result.Release()
+	defer resultRaw.Clear()
 
 	count, err := oleInt64(result, "Count")
 	if err != nil {
 		return err
 	}
+
+	// Initialize a slice with Count capacity
+	dv.Set(reflect.MakeSlice(dv.Type(), 0, int(count)))
 
 	var errFieldMismatch error
 	for i := int64(0); i < count; i++ {
@@ -132,7 +146,7 @@ func Query(query string, dst interface{}, connectServerArgs ...interface{}) erro
 				return err
 			}
 			item := itemRaw.ToIDispatch()
-			defer item.Release()
+			defer itemRaw.Clear()
 
 			ev := reflect.New(elemType)
 			if err = loadEntity(ev.Interface(), item); err != nil {
@@ -203,6 +217,8 @@ func loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismatch error) {
 			}
 			continue
 		}
+		defer prop.Clear()
+
 		switch val := prop.Value(); reflect.ValueOf(val).Kind() {
 		case reflect.Int64:
 			iv := val.(int64)
@@ -308,6 +324,8 @@ func oleInt64(item *ole.IDispatch, prop string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+	defer v.Clear()
+
 	i := int64(v.Val)
 	return i, nil
 }
