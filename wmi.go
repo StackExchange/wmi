@@ -55,8 +55,8 @@ func QueryNamespace(query string, dst interface{}, namespace string) error {
 //
 // dst must have type *[]S or *[]*S, for some struct type S. Fields selected in
 // the query must have the same name in dst. Supported types are all signed and
-// unsigned integers, time.Time, string, bool. Array types are not supported.
-// See wmi_test.go for some examples.
+// unsigned integers, time.Time, string, bool, or a pointer to one of those.
+// Array types are not supported.
 //
 // By default, the local machine and default namespace are used. These can be
 // changed using connectServerArgs. See
