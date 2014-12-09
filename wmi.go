@@ -273,7 +273,7 @@ func loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismatch error) {
 			return &ErrFieldMismatch{
 				StructType: f.Type(),
 				FieldName:  n,
-				Reason:     "unsupported type",
+				Reason:     fmt.Sprintf("unsupported type (%T)", val),
 			}
 		}
 	}
