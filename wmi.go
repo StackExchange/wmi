@@ -46,6 +46,121 @@ var (
 	lock                 sync.Mutex
 )
 
+func InvokeMethod(class string, name string, args []interface{}, dst interface{}, connectServerArgs ...interface{}) error {
+	dv := reflect.ValueOf(dst)
+	fmt.Println()
+	if dv.Kind() != reflect.Ptr || dv.IsNil() {
+		return ErrInvalidEntityType
+	}
+	elemType := dv.Type().Elem()
+	//if mat == multiArgTypeInvalid {
+	//	return ErrInvalidEntityType
+	//}
+
+	lock.Lock()
+	defer lock.Unlock()
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
+	err := ole.CoInitializeEx(0, ole.COINIT_MULTITHREADED)
+	if err != nil {
+		oleerr := err.(*ole.OleError)
+		// S_FALSE           = 0x00000001 // CoInitializeEx was already called on this thread
+		if oleerr.Code() != ole.S_OK && oleerr.Code() != 0x00000001 {
+			l.Printf("CoInitializeEx err %v\n", oleerr)
+			return err
+		}
+	} else {
+		// Only invoke CoUninitialize if the thread was not initizlied before.
+		// This will allow other go packages based on go-ole play along
+		// with this library.
+
+		//This was causing "Object is not connected to server." issues with ConfigurationModeFrequencyMins. Need to know how to initilize this outside the method or transform variant to native struct before returning
+		//defer ole.CoUninitialize()
+	}
+
+	unknown, err := oleutil.CreateObject("WbemScripting.SWbemLocator")
+	if err != nil {
+		l.Printf("SWbemLocator err %v\n", err)
+		return err
+	}
+	defer unknown.Release()
+
+	wmi, err := unknown.QueryInterface(ole.IID_IDispatch)
+	if err != nil {
+		l.Printf("SWbemLocator IID_IDispatch err %v\n", err)
+		return err
+	}
+	defer wmi.Release()
+
+	// service is a SWbemServices
+	serviceRaw, err := oleutil.CallMethod(wmi, "ConnectServer", connectServerArgs...)
+	if err != nil {
+		l.Printf("ConnectServer err %v\n", err)
+		return err
+	}
+	service := serviceRaw.ToIDispatch()
+	defer serviceRaw.Clear()
+
+	// wmiClass is a SWbemObject
+	l.Printf("Get wmiClass: %v\n", class)
+	wmiClassRaw, err := oleutil.CallMethod(service, "Get", class)
+	if err != nil {
+		l.Printf("Get err %v\n", err)
+		return err
+	}
+	wmiClass := wmiClassRaw.ToIDispatch()
+	defer wmiClassRaw.Clear()
+
+	if wmiClass == nil {
+		l.Panicf("ERROR: wmiClass is nil!\n")
+	}
+
+	// result is
+	l.Printf("call method '%v' on wmiClass %v with args: %v\n", name, wmiClass, args)
+	resultRaw, err := oleutil.CallMethod(wmiClass, name, args...)
+	//resultRaw, err := oleutil.CallMethod(wmiClass, "ExecMethod_", name)
+	if err != nil {
+		l.Printf("wmiClass method err %v\n", err)
+		return err
+	}
+	result := resultRaw.Value()
+	defer resultRaw.Clear()
+	vresult := reflect.ValueOf(result)
+	tvresult := vresult.Type()
+	if tvresult == elemType {
+		dv.Elem().Set(vresult)
+		//TODO: use code below to convert output ole.VARIANT type to go struct.
+		return nil
+	} else {
+		return errors.New(fmt.Sprintf("type %v returned from %v method does not match dst type %v", tvresult, name, elemType))
+	}
+
+	/*
+			l.Printf("result pointer is %p", result)
+
+			l.Printf("use loadEntity to convert result %p to elemType: %v\n", result, elemType)
+			var errFieldMismatch error
+			ev := reflect.New(elemType)
+			l.Printf("ev: %v\n", ev)
+			if err = loadEntity(ev.Interface(), result); err != nil {
+				if _, ok := err.(*ErrFieldMismatch); ok {
+					l.Println("3")
+					// We continue loading entities even in the face of field mismatch errors.
+					// If we encounter any other error, that other error is returned. Otherwise,
+					// an ErrFieldMismatch is returned.
+					errFieldMismatch = err
+				} else {
+					l.Println("4")
+					return err
+				}
+			}
+			l.Println("5")
+
+		return errFieldMismatch
+	*/
+}
+
 // QueryNamespace invokes Query with the given namespace on the local machine.
 func QueryNamespace(query string, dst interface{}, namespace string) error {
 	return Query(query, dst, nil, namespace)
@@ -139,6 +254,7 @@ func Query(query string, dst interface{}, connectServerArgs ...interface{}) erro
 			defer itemRaw.Clear()
 
 			ev := reflect.New(elemType)
+			//l.Printf("use loadEntity to convert item %v to elemType: %v\n", item, elemType)
 			if err = loadEntity(ev.Interface(), item); err != nil {
 				if _, ok := err.(*ErrFieldMismatch); ok {
 					// We continue loading entities even in the face of field mismatch errors.
@@ -182,6 +298,7 @@ var timeType = reflect.TypeOf(time.Time{})
 // loadEntity loads a SWbemObject into a struct pointer.
 func loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismatch error) {
 	v := reflect.ValueOf(dst).Elem()
+	l.Printf("v: %v\n", v)
 	for i := 0; i < v.NumField(); i++ {
 		f := v.Field(i)
 		isPtr := f.Kind() == reflect.Ptr
@@ -190,15 +307,20 @@ func loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismatch error) {
 			f.Set(ptr)
 			f = f.Elem()
 		}
+		l.Printf("f(%v): %v\n", i, f)
 		n := v.Type().Field(i).Name
+		l.Printf("n(%v): %v\n", i, n)
 		if !f.CanSet() {
+			l.Printf("!f.CanSet()\n")
 			return &ErrFieldMismatch{
 				StructType: f.Type(),
 				FieldName:  n,
 				Reason:     "CanSet() is false",
 			}
 		}
+		l.Printf("next\n")
 		prop, err := oleutil.GetProperty(src, n)
+		l.Printf("prop: %v, err: %v\n", prop, err)
 		if err != nil {
 			errFieldMismatch = &ErrFieldMismatch{
 				StructType: f.Type(),
