@@ -255,7 +255,7 @@ type Win32_OperatingSystem struct {
 	CountryCode                               string
 	CreationClassName                         string
 	CSCreationClassName                       string
-	CSDVersion                                string
+	CSDVersion                                *string
 	CSName                                    string
 	CurrentTimeZone                           int16
 	DataExecutionPrevention_Available         bool
