@@ -1,25 +1,25 @@
-/*
-Package wmi provides a WQL interface for WMI on Windows.
+// Package wmi provides a WQL interface for WMI on Windows.
+//
+// Example code to print names of running processes:
+//
+// 	type Win32_Process struct {
+// 		Name string
+// 	}
+//
+// 	func main() {
+// 		var dst []Win32_Process
+// 		q := wmi.CreateQuery(&dst, "")
+// 		err := wmi.Query(q, &dst)
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
+// 		for i, v := range dst {
+// 			println(i, v.Name)
+// 		}
+// 	}
+//
+// +build windows
 
-Example code to print names of running processes:
-
-	type Win32_Process struct {
-		Name string
-	}
-
-	func main() {
-		var dst []Win32_Process
-		q := wmi.CreateQuery(&dst, "")
-		err := wmi.Query(q, &dst)
-		if err != nil {
-			log.Fatal(err)
-		}
-		for i, v := range dst {
-			println(i, v.Name)
-		}
-	}
-
-*/
 package wmi
 
 import (
@@ -255,7 +255,7 @@ func loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismatch error) {
 						if err != nil {
 							return err
 						}
-						val = val[:22] + fmt.Sprintf("%02d%02d", mins / 60, mins % 60)
+						val = val[:22] + fmt.Sprintf("%02d%02d", mins/60, mins%60)
 					}
 					t, err := time.Parse("20060102150405.000000-0700", val)
 					if err != nil {
