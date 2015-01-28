@@ -186,6 +186,7 @@ func loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismatch error) {
 	v := reflect.ValueOf(dst).Elem()
 	for i := 0; i < v.NumField(); i++ {
 		f := v.Field(i)
+		of := f
 		isPtr := f.Kind() == reflect.Ptr
 		if isPtr {
 			ptr := reflect.New(f.Type().Elem())
@@ -195,7 +196,7 @@ func loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismatch error) {
 		n := v.Type().Field(i).Name
 		if !f.CanSet() {
 			return &ErrFieldMismatch{
-				StructType: f.Type(),
+				StructType: of.Type(),
 				FieldName:  n,
 				Reason:     "CanSet() is false",
 			}
@@ -203,7 +204,7 @@ func loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismatch error) {
 		prop, err := oleutil.GetProperty(src, n)
 		if err != nil {
 			errFieldMismatch = &ErrFieldMismatch{
-				StructType: f.Type(),
+				StructType: of.Type(),
 				FieldName:  n,
 				Reason:     "no such struct field",
 			}
@@ -229,7 +230,7 @@ func loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismatch error) {
 				f.SetUint(uint64(v))
 			default:
 				return &ErrFieldMismatch{
-					StructType: f.Type(),
+					StructType: of.Type(),
 					FieldName:  n,
 					Reason:     "not an integer class",
 				}
@@ -272,7 +273,7 @@ func loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismatch error) {
 				f.SetBool(val)
 			default:
 				return &ErrFieldMismatch{
-					StructType: f.Type(),
+					StructType: of.Type(),
 					FieldName:  n,
 					Reason:     "not a bool",
 				}
@@ -280,10 +281,11 @@ func loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismatch error) {
 		default:
 			typeof := reflect.TypeOf(val)
 			if isPtr && typeof == nil {
+				of.Set(reflect.Zero(of.Type()))
 				break
 			}
 			return &ErrFieldMismatch{
-				StructType: f.Type(),
+				StructType: of.Type(),
 				FieldName:  n,
 				Reason:     fmt.Sprintf("unsupported type (%T)", val),
 			}
