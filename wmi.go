@@ -255,7 +255,7 @@ func loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismatch error) {
 						if err != nil {
 							return err
 						}
-						val = val[:22] + fmt.Sprintf("%02d%02d", mins / 60, mins % 60)
+						val = val[:22] + fmt.Sprintf("%02d%02d", mins/60, mins%60)
 					}
 					t, err := time.Parse("20060102150405.000000-0700", val)
 					if err != nil {
