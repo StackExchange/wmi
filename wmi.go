@@ -86,6 +86,13 @@ type Client struct {
 	// Setting this to true will set pointer fields to nil where WMI
 	// returned nil, otherwise the types zero value will be returned.
 	PtrNil bool
+
+	// AllowMissingFields specifies that struct fields not present in the
+	// query result should not result in an error.
+	//
+	// Setting this to true allows custom queries to be used with full
+	// struct definitions instead of having to define multiple structs.
+	AllowMissingFields bool
 }
 
 // DefaultClient is the default Client and is used by Query, QueryNamespace
@@ -241,10 +248,12 @@ func (c *Client) loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismat
 		}
 		prop, err := oleutil.GetProperty(src, n)
 		if err != nil {
-			errFieldMismatch = &ErrFieldMismatch{
-				StructType: of.Type(),
-				FieldName:  n,
-				Reason:     "no such struct field",
+			if !c.AllowMissingFields {
+				errFieldMismatch = &ErrFieldMismatch{
+					StructType: of.Type(),
+					FieldName:  n,
+					Reason:     "no such struct field",
+				}
 			}
 			continue
 		}
