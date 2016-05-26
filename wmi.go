@@ -34,7 +34,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/go-ole/go-ole"
@@ -45,8 +44,13 @@ var l = log.New(os.Stdout, "", log.LstdFlags)
 
 var (
 	ErrInvalidEntityType = errors.New("wmi: invalid entity type")
-	lock                 sync.Mutex
+	// ErrNilCreateObject is the error returned if CreateObject returns nil even
+	// if the error was nil.
+	ErrNilCreateObject = errors.New("wmi: create object returned nil")
 )
+
+// S_FALSE is returned by CoInitializeEx if it was already called on this thread.
+const S_FALSE = 0x00000001
 
 // QueryNamespace invokes Query with the given namespace on the local machine.
 func QueryNamespace(query string, dst interface{}, namespace string) error {
@@ -119,28 +123,23 @@ func (c *Client) Query(query string, dst interface{}, connectServerArgs ...inter
 		return ErrInvalidEntityType
 	}
 
-	lock.Lock()
-	defer lock.Unlock()
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
-	err := ole.CoInitializeEx(0, ole.COINIT_MULTITHREADED)
+	err := ole.CoInitializeEx(0, ole.COINIT_APARTMENTTHREADED)
 	if err != nil {
-		oleerr := err.(*ole.OleError)
-		// S_FALSE           = 0x00000001 // CoInitializeEx was already called on this thread
-		if oleerr.Code() != ole.S_OK && oleerr.Code() != 0x00000001 {
+		oleCode := err.(*ole.OleError).Code()
+		if oleCode != ole.S_OK && oleCode != S_FALSE {
 			return err
 		}
-	} else {
-		// Only invoke CoUninitialize if the thread was not initizlied before.
-		// This will allow other go packages based on go-ole play along
-		// with this library.
-		defer ole.CoUninitialize()
 	}
+	defer ole.CoUninitialize()
 
 	unknown, err := oleutil.CreateObject("WbemScripting.SWbemLocator")
 	if err != nil {
 		return err
+	} else if unknown == nil {
+		return ErrNilCreateObject
 	}
 	defer unknown.Release()
 
