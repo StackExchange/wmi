@@ -171,19 +171,33 @@ func (c *Client) Query(query string, dst interface{}, connectServerArgs ...inter
 		return err
 	}
 
+	enumProperty, err := result.GetProperty("_NewEnum")
+	if err != nil {
+		return err
+	}
+	defer enumProperty.Clear()
+
+	enum, err := enumProperty.ToIUnknown().IEnumVARIANT(ole.IID_IEnumVariant)
+	if err != nil {
+		return err
+	}
+	if enum == nil {
+		return fmt.Errorf("can't get IEnumVARIANT, enum is nil")
+	}
+
 	// Initialize a slice with Count capacity
 	dv.Set(reflect.MakeSlice(dv.Type(), 0, int(count)))
 
 	var errFieldMismatch error
-	for i := int64(0); i < count; i++ {
+	for itemRaw, length, err := enum.Next(1); length > 0; itemRaw, length, err = enum.Next(1) {
+		if err != nil {
+			return err
+		}
+
 		err := func() error {
 			// item is a SWbemObject, but really a Win32_Process
-			itemRaw, err := oleutil.CallMethod(result, "ItemIndex", i)
-			if err != nil {
-				return err
-			}
 			item := itemRaw.ToIDispatch()
-			defer itemRaw.Clear()
+			defer item.Release()
 
 			ev := reflect.New(elemType)
 			if err = c.loadEntity(ev.Interface(), item); err != nil {
