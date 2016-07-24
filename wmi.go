@@ -332,6 +332,11 @@ func (c *Client) loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismat
 					Reason:     "not a bool",
 				}
 			}
+		case float32:
+			switch f.Kind() {
+			case reflect.Float32:
+				f.SetFloat(float64(val))
+			}
 		default:
 			typeof := reflect.TypeOf(val)
 			if typeof == nil && (isPtr || c.NonePtrZero) {
