@@ -343,7 +343,6 @@ func (c *Client) loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismat
 					Reason:     "not a Float32",
 				}
 			}
-
 		default:
 			typeof := reflect.TypeOf(val)
 			if typeof == nil && (isPtr || c.NonePtrZero) {
