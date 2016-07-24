@@ -336,7 +336,14 @@ func (c *Client) loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismat
 			switch f.Kind() {
 			case reflect.Float32:
 				f.SetFloat(float64(val))
+			default:
+				return &ErrFieldMismatch{
+					StructType: of.Type(),
+					FieldName:  n,
+					Reason:     "not a Float32",
+				}
 			}
+
 		default:
 			typeof := reflect.TypeOf(val)
 			if typeof == nil && (isPtr || c.NonePtrZero) {
