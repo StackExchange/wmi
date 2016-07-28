@@ -48,7 +48,7 @@ var (
 	// ErrNilCreateObject is the error returned if CreateObject returns nil even
 	// if the error was nil.
 	ErrNilCreateObject = errors.New("wmi: create object returned nil")
-	lock                 sync.Mutex
+	lock               sync.Mutex
 )
 
 // S_FALSE is returned by CoInitializeEx if it was already called on this thread.
@@ -187,6 +187,7 @@ func (c *Client) Query(query string, dst interface{}, connectServerArgs ...inter
 	if enum == nil {
 		return fmt.Errorf("can't get IEnumVARIANT, enum is nil")
 	}
+	defer enum.Release()
 
 	// Initialize a slice with Count capacity
 	dv.Set(reflect.MakeSlice(dv.Type(), 0, int(count)))
