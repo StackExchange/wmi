@@ -48,6 +48,7 @@ var (
 	// ErrNilCreateObject is the error returned if CreateObject returns nil even
 	// if the error was nil.
 	ErrNilCreateObject = errors.New("wmi: create object returned nil")
+	ErrWMITimeout = errors.New("wmi: query timeout")
 	lock               sync.Mutex
 )
 
@@ -73,7 +74,14 @@ func QueryNamespace(query string, dst interface{}, namespace string) error {
 // Query is a wrapper around DefaultClient.Query.
 func Query(query string, dst interface{}, connectServerArgs ...interface{}) error {
 	if DefaultClient.SWbemServicesClient == nil {
-		return DefaultClient.Query(query, dst, connectServerArgs...)
+		c := make(chan error, 1)
+		go func() { c <- DefaultClient.Query(query, dst, connectServerArgs...) } ()
+		select {
+		case err := <-c:
+			return err
+		case <-time.After(2*time.Second):
+			return ErrWMITimeout
+		}
 	}
 	return DefaultClient.SWbemServicesClient.Query(query, dst, connectServerArgs...)
 }
