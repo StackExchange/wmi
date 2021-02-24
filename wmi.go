@@ -557,7 +557,10 @@ func oleInt64(item *ole.IDispatch, prop string) (int64, error) {
 // CreateQuery returns a WQL query string that queries all columns of src. where
 // is an optional string that is appended to the query, to be used with WHERE
 // clauses. In such a case, the "WHERE" string should appear at the beginning.
-func CreateQuery(src interface{}, where string) string {
+// The wmi class is obtained by the name of the type. You can pass a optional
+// class throught the variadic class parameter which is useful for anonymous
+// structs.
+func CreateQuery(src interface{}, where string, class ...string) string {
 	var b bytes.Buffer
 	b.WriteString("SELECT ")
 	s := reflect.Indirect(reflect.ValueOf(src))
@@ -574,7 +577,11 @@ func CreateQuery(src interface{}, where string) string {
 	}
 	b.WriteString(strings.Join(fields, ", "))
 	b.WriteString(" FROM ")
-	b.WriteString(t.Name())
+	if len(class) > 0{
+		b.WriteString(class[0])
+	} else {
+		b.WriteString(t.Name())
+	}
 	b.WriteString(" " + where)
 	return b.String()
 }
